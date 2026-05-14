@@ -1,26 +1,21 @@
-"""Temporary prediction service used before connecting the trained CNN model.
-
-This file intentionally keeps the same service boundary that the real model will use.
-Later, only this service needs to change; the UI can stay mostly untouched.
-"""
+"""Fallback prediction service used before the CNN model is trained."""
 
 from hashlib import sha256
 
-from src.config import DISEASE_CLASSES, DISEASE_DETAILS
+from PIL import Image
+
+from src.config import DISEASE_DETAILS, DISPLAY_NAMES, REQUIRED_DATASET_CLASSES
 from src.models.prediction_result import PredictionResult
 
 
-def predict_leaf_disease_demo(file_name: str) -> PredictionResult:
-    """Return a deterministic demo prediction based on the uploaded file name.
+def predict_leaf_disease_demo(image: Image.Image, file_name: str) -> PredictionResult:
+    """Return a deterministic placeholder prediction while the model is unavailable."""
+    file_hash = sha256(f"{file_name}-{image.size}".encode("utf-8")).hexdigest()
+    class_index = int(file_hash[:2], 16) % len(REQUIRED_DATASET_CLASSES)
+    confidence = 70.0 + (int(file_hash[2:4], 16) % 26)
 
-    This makes the interface testable before the CNN model exists.
-    It is not real AI yet. We will replace it with TensorFlow inference next.
-    """
-    file_hash = sha256(file_name.encode("utf-8")).hexdigest()
-    class_index = int(file_hash[:2], 16) % len(DISEASE_CLASSES)
-    confidence = 72.0 + (int(file_hash[2:4], 16) % 25)
-
-    disease_name = DISEASE_CLASSES[class_index]
+    raw_class_name = REQUIRED_DATASET_CLASSES[class_index]
+    disease_name = DISPLAY_NAMES[raw_class_name]
     details = DISEASE_DETAILS[disease_name]
 
     return PredictionResult(
@@ -29,4 +24,5 @@ def predict_leaf_disease_demo(file_name: str) -> PredictionResult:
         severity=details["severity"],
         description=details["description"],
         recommendation=details["recommendation"],
+        is_real_model=False,
     )

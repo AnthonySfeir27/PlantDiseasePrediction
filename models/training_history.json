@@ -1,0 +1,56 @@
+{
+  "epochs_requested": 5,
+  "class_names": [
+    "Pepper__bell___Bacterial_spot",
+    "Pepper__bell___healthy",
+    "Potato___Early_blight",
+    "Potato___Late_blight",
+    "Potato___healthy",
+    "Tomato_Bacterial_spot",
+    "Tomato_Septoria_leaf_spot",
+    "Tomato_Spider_mites_Two_spotted_spider_mite",
+    "Tomato__Target_Spot",
+    "Tomato__Tomato_YellowLeaf__Curl_Virus",
+    "Tomato__Tomato_mosaic_virus",
+    "Tomato___Early_blight",
+    "Tomato___Late_blight",
+    "Tomato___Leaf_Mold",
+    "Tomato___healthy"
+  ],
+  "dataset_summary": {
+    "Tomato___healthy": 1591,
+    "Tomato___Early_blight": 1000,
+    "Tomato___Late_blight": 1909,
+    "Tomato___Leaf_Mold": 952
+  },
+  "history": {
+    "accuracy": [
+      0.6650717854499817,
+      0.8258736729621887,
+      0.8523408770561218,
+      0.8686935901641846,
+      0.8788686394691467
+    ],
+    "loss": [
+      1.0886672735214233,
+      0.5677709579467773,
+      0.4685598611831665,
+      0.41486796736717224,
+      0.3783821165561676
+    ],
+    "val_accuracy": [
+      0.8342621922492981,
+      0.8616428375244141,
+      0.8693966269493103,
+      0.8803004622459412,
+      0.8861158490180969
+    ],
+    "val_loss": [
+      0.5905659794807434,
+      0.46822383999824524,
+      0.4276902377605438,
+      0.38589316606521606,
+      0.36476433277130127
+    ]
+  }
+}
