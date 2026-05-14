@@ -1,11 +1,19 @@
-"""Data model for one prediction result."""
+"""Data models for prediction output shown in the UI."""
 
 from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
+class PredictionCandidate:
+    """Represents one class candidate returned by the model."""
+
+    disease_name: str
+    confidence: float
+
+
+@dataclass(frozen=True)
 class PredictionResult:
-    """Represents the output shown after analyzing one image."""
+    """Represents the complete output shown after analyzing one image."""
 
     disease_name: str
     confidence: float
@@ -13,3 +21,4 @@ class PredictionResult:
     description: str
     recommendation: str
     is_real_model: bool
+    top_predictions: list[PredictionCandidate]

@@ -6,9 +6,16 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image
 
-from src.config import CLASS_NAMES_PATH, DISEASE_DETAILS, DISPLAY_NAMES, IMAGE_SIZE, MODEL_PATH
+from src.config import (
+    CLASS_NAMES_PATH,
+    DISEASE_DETAILS,
+    DISPLAY_NAMES,
+    IMAGE_SIZE,
+    MODEL_PATH,
+    TOP_PREDICTION_COUNT,
+)
 from src.models.model_status import ModelStatus
-from src.models.prediction_result import PredictionResult
+from src.models.prediction_result import PredictionCandidate, PredictionResult
 from src.utils.file_io import read_json
 
 
@@ -40,27 +47,52 @@ def predict_leaf_disease(image: Image.Image) -> PredictionResult:
 
     model_input = prepare_image_for_model(image)
     probabilities = model.predict(model_input, verbose=0)[0]
-    class_index = int(np.argmax(probabilities))
-    confidence = float(probabilities[class_index] * 100)
+    top_predictions = build_top_predictions(probabilities, class_names)
+    best_prediction = top_predictions[0]
+    details = get_disease_details(best_prediction.disease_name)
 
-    raw_class_name = class_names[class_index]
-    disease_name = DISPLAY_NAMES.get(raw_class_name, raw_class_name.replace("___", " ").replace("_", " "))
-    details = DISEASE_DETAILS.get(
+    return PredictionResult(
+        disease_name=best_prediction.disease_name,
+        confidence=best_prediction.confidence,
+        severity=details["severity"],
+        description=details["description"],
+        recommendation=details["recommendation"],
+        is_real_model=True,
+        top_predictions=top_predictions,
+    )
+
+
+def build_top_predictions(probabilities: np.ndarray, class_names: list[str]) -> list[PredictionCandidate]:
+    """Return the highest probability model classes in descending order."""
+    count = min(TOP_PREDICTION_COUNT, len(class_names))
+    sorted_indexes = np.argsort(probabilities)[::-1][:count]
+
+    predictions = []
+    for class_index in sorted_indexes:
+        raw_class_name = class_names[int(class_index)]
+        disease_name = format_class_name(raw_class_name)
+        confidence = float(probabilities[int(class_index)] * 100)
+        predictions.append(PredictionCandidate(disease_name=disease_name, confidence=confidence))
+
+    return predictions
+
+
+def format_class_name(raw_class_name: str) -> str:
+    """Convert a raw dataset folder name into a readable disease name."""
+    if raw_class_name in DISPLAY_NAMES:
+        return DISPLAY_NAMES[raw_class_name]
+    return raw_class_name.replace("___", " ").replace("__", " ").replace("_", " ").strip()
+
+
+def get_disease_details(disease_name: str) -> dict[str, str]:
+    """Return manual display details for a disease class."""
+    return DISEASE_DETAILS.get(
         disease_name,
         {
             "severity": "Unknown",
             "description": "The model returned a class that has no manual description yet.",
             "recommendation": "Review the image and verify the class manually.",
         },
-    )
-
-    return PredictionResult(
-        disease_name=disease_name,
-        confidence=confidence,
-        severity=details["severity"],
-        description=details["description"],
-        recommendation=details["recommendation"],
-        is_real_model=True,
     )
 
 

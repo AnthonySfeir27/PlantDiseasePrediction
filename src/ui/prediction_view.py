@@ -1,9 +1,11 @@
-"""UI rendering for uploaded images and prediction results."""
+"""UI rendering for uploaded images, model information, and prediction results."""
 
 from PIL import Image
 import streamlit as st
 
+from src.config import CLASS_NAMES_PATH, MODEL_DIR, TRAINING_HISTORY_PATH
 from src.models.prediction_result import PredictionResult
+from src.utils.file_io import read_json
 
 
 def render_uploaded_image(uploaded_file) -> Image.Image:
@@ -20,13 +22,13 @@ def render_uploaded_image(uploaded_file) -> Image.Image:
         st.write(f"**File name:** {uploaded_file.name}")
         st.write(f"**Image size:** {image.width} x {image.height}")
         st.write(f"**Image mode:** {image.mode}")
-        st.write("**Expected input:** one clear tomato leaf image")
+        st.write("**Expected input:** one clear plant leaf image")
 
     return image
 
 
 def render_prediction_result(prediction: PredictionResult) -> None:
-    """Display disease prediction, confidence, and recommendation details."""
+    """Display disease prediction, confidence, top classes, and recommendation details."""
     st.divider()
     st.subheader("Prediction Result")
 
@@ -49,11 +51,55 @@ def render_prediction_result(prediction: PredictionResult) -> None:
         st.write("**Recommended Action**")
         st.write(prediction.recommendation)
 
+    render_top_predictions(prediction)
+
+
+def render_top_predictions(prediction: PredictionResult) -> None:
+    """Show the top model classes so low-confidence outputs are easier to explain."""
+    if not prediction.top_predictions:
+        return
+
+    st.write("**Top model predictions**")
+    for candidate in prediction.top_predictions:
+        st.write(f"{candidate.disease_name} — {candidate.confidence:.1f}%")
+        st.progress(min(int(candidate.confidence), 100))
+
+
+def render_model_information() -> None:
+    """Show the trained model summary from saved metadata when available."""
+    if not TRAINING_HISTORY_PATH.exists():
+        return
+
+    training_data = read_json(TRAINING_HISTORY_PATH)
+    class_names = training_data.get("class_names", [])
+    dataset_summary = training_data.get("dataset_summary", {})
+    history = training_data.get("history", {})
+    validation_accuracy = history.get("val_accuracy", [])
+    training_accuracy = history.get("accuracy", [])
+
+    st.divider()
+    st.subheader("Model Information")
+
+    columns = st.columns(4)
+    columns[0].metric("Classes", len(class_names))
+    columns[1].metric("Images", sum(dataset_summary.values()) if isinstance(dataset_summary, dict) else "N/A")
+    columns[2].metric("Final Validation Accuracy", format_accuracy(validation_accuracy))
+    columns[3].metric("Final Training Accuracy", format_accuracy(training_accuracy))
+
+    with st.expander("Show trained classes"):
+        for class_name in class_names:
+            st.write(f"- {class_name}")
+
+
+def format_accuracy(values: list[float]) -> str:
+    """Format the latest accuracy value from Keras history."""
+    if not values:
+        return "N/A"
+    return f"{values[-1] * 100:.1f}%"
+
 
 def render_training_outputs() -> None:
     """Show saved training charts if they exist."""
-    from src.config import MODEL_DIR
-
     accuracy_plot = MODEL_DIR / "accuracy_plot.png"
     loss_plot = MODEL_DIR / "loss_plot.png"
 

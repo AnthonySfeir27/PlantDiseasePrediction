@@ -115,3 +115,14 @@ git add .
 git commit -m "Add CNN training and prediction pipeline"
 git push
 ```
+
+## Latest UI additions
+
+The app now shows:
+
+- the number of trained classes loaded from `models/class_names.json`
+- top 3 predictions for each image
+- training/validation accuracy metrics from `models/training_history.json`
+- saved accuracy and loss charts when available
+
+This is useful when the top prediction has low confidence, because the second and third model choices explain what the model was considering.

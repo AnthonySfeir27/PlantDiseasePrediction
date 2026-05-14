@@ -6,7 +6,12 @@ from src.config import APP_SUBTITLE, APP_TITLE, SUPPORTED_IMAGE_TYPES
 from src.services.demo_prediction_service import predict_leaf_disease_demo
 from src.services.prediction_service import get_model_status, predict_leaf_disease
 from src.ui.layout import configure_page, render_header, render_sidebar
-from src.ui.prediction_view import render_prediction_result, render_training_outputs, render_uploaded_image
+from src.ui.prediction_view import (
+    render_model_information,
+    render_prediction_result,
+    render_training_outputs,
+    render_uploaded_image,
+)
 from src.ui.session_state import add_prediction_to_history, initialize_session_state
 
 
@@ -18,6 +23,7 @@ def main() -> None:
     model_status = get_model_status()
     render_sidebar(model_status)
     render_header(APP_TITLE, APP_SUBTITLE)
+    render_model_information()
     render_training_outputs()
 
     uploaded_file = st.file_uploader(
